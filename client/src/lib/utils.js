@@ -1,7 +1,18 @@
-export function formatMessageTime(date) {
-    return new Date(date).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+export const formatMessageTime = (timestamp) => {
+  if (!timestamp) return "";
+  
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return "";
+    
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    }).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return "";
   }
+};
+

@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
+import { useGroupChatStore } from "../store/useGroupChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 
-const MessageInput = () => {
+const MessageInput = ({ isGroup = false }) => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
+  const { sendGroupMessage } = useGroupChatStore();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -33,10 +35,16 @@ const MessageInput = () => {
     if (!text.trim() && !imagePreview) return;
 
     try {
-      await sendMessage({
+      const messageData = {
         text: text.trim(),
         image: imagePreview,
-      });
+      };
+
+      if (isGroup) {
+        await sendGroupMessage(messageData);
+      } else {
+        await sendMessage(messageData);
+      }
 
       // Clear form
       setText("");
@@ -44,6 +52,7 @@ const MessageInput = () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to send message:", error);
+      toast.error("Failed to send message. Please try again.");
     }
   };
 
@@ -74,7 +83,7 @@ const MessageInput = () => {
           <input
             type="text"
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
-            placeholder="Type a message..."
+            placeholder={`Type a message${isGroup ? ' to group' : ''}...`}
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
@@ -106,4 +115,5 @@ const MessageInput = () => {
     </div>
   );
 };
+
 export default MessageInput;

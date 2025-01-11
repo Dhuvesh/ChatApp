@@ -15,21 +15,47 @@ export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
-// used to store online users
 const userSocketMap = {}; // {userId: socketId}
+const userGroupsMap = {}; // {userId: [groupId1, groupId2, ...]}
 
 io.on("connection", (socket) => {
   console.log("A user connected", socket.id);
 
   const userId = socket.handshake.query.userId;
-  if (userId) userSocketMap[userId] = socket.id;
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+    
+    // Join user's group rooms
+    if (userGroupsMap[userId]) {
+      userGroupsMap[userId].forEach((groupId) => {
+        socket.join(groupId);
+      });
+    }
+  }
 
-  // io.emit() is used to send events to all the connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+  // Handle joining groups
+  socket.on("joinGroup", (groupId) => {
+    socket.join(groupId);
+    if (!userGroupsMap[userId]) {
+      userGroupsMap[userId] = [];
+    }
+    userGroupsMap[userId].push(groupId);
+  });
+
+  // Handle leaving groups
+  socket.on("leaveGroup", (groupId) => {
+    socket.leave(groupId);
+    if (userGroupsMap[userId]) {
+      userGroupsMap[userId] = userGroupsMap[userId].filter(id => id !== groupId);
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("A user disconnected", socket.id);
     delete userSocketMap[userId];
+    delete userGroupsMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });

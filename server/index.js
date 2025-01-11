@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import messageRoutes from './src/routes/message.route.js';
 import cors from 'cors';
 import { app, server } from './src/lib/socket.js';
+import groupRoutes from './src/routes/group.route.js';
 
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use(cors({
 
 app.use('/api/auth', AuthRoutes)
 app.use('/api/messages', messageRoutes)
+app.use('/api/groups', groupRoutes); 
 
 
 server.listen(PORT , () => {
